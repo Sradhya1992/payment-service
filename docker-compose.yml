@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  payment-service:
+    build:
+      context: .   # folder containing your Dockerfile
+      dockerfile: Dockerfile
+    container_name: payment-service
+    ports:
+      - "8082:8082"                # expose service on port 8082
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://payment-db:5432/paymentdb?sslmode=disable
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+    depends_on:
+      - payment-db                 # wait for DB before starting
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  payment-db:
+    image: postgres:15
+    container_name: payment-db
+    environment:
+      POSTGRES_DB: paymentdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
