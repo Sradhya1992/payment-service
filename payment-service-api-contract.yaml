@@ -1,0 +1,284 @@
+openapi: 3.0.3
+info:
+  title: Payment Service API
+  version: 1.0.0
+  description: >
+    API contract for the Payment Service in the BITS ride-hailing microservices
+    assignment. The service owns trip payments, idempotent charge processing,
+    payment lookup, and refund status updates.
+
+servers:
+  - url: http://localhost:8082
+    description: Local development
+  - url: http://payment-service:8082
+    description: Docker Compose or Kubernetes service DNS
+
+tags:
+  - name: Health
+  - name: Payments
+
+paths:
+  /actuator/health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Returns Spring Boot Actuator health status for the service.
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /v1/payments:
+    get:
+      tags:
+        - Payments
+      summary: List payments
+      description: Returns recent payment records ordered by creation time descending.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of payments to return. Values are clamped from 1 to 100.
+          schema:
+            type: integer
+            default: 25
+            minimum: 1
+            maximum: 100
+            example: 25
+      responses:
+        "200":
+          description: Payments returned successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponse"
+
+  /v1/payments/{id}:
+    get:
+      tags:
+        - Payments
+      summary: Get payment by ID
+      parameters:
+        - $ref: "#/components/parameters/PaymentId"
+      responses:
+        "200":
+          description: Payment found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+        "404":
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/payments/trips/{tripId}:
+    get:
+      tags:
+        - Payments
+      summary: Get latest payment by trip ID
+      description: Returns the latest payment record associated with a trip.
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          description: Trip identifier owned by Trip Service.
+          schema:
+            type: string
+            example: "101"
+      responses:
+        "200":
+          description: Payment found for trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+        "404":
+          description: Payment not found for trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/payments/charge:
+    post:
+      tags:
+        - Payments
+      summary: Charge a completed trip
+      description: >
+        Processes a mock payment for a completed trip. The `transactionRef` field
+        is the idempotency key; sending the same reference again returns the
+        existing payment instead of creating a duplicate charge.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentRequest"
+            examples:
+              cardCharge:
+                value:
+                  tripId: "101"
+                  amount: 248.50
+                  method: CARD
+                  transactionRef: txn-demo-101
+      responses:
+        "200":
+          description: Charge processed or existing idempotent payment returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+        "400":
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Duplicate transaction reference conflicts with another request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Trip is not completed or cannot be charged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/payments/{id}/refund:
+    post:
+      tags:
+        - Payments
+      summary: Refund a payment
+      description: Marks an existing payment as `REFUNDED`.
+      parameters:
+        - $ref: "#/components/parameters/PaymentId"
+      responses:
+        "200":
+          description: Payment refunded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+        "404":
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  parameters:
+    PaymentId:
+      name: id
+      in: path
+      required: true
+      description: Payment identifier.
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        example: 1
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: UP
+
+    PaymentRequest:
+      type: object
+      required:
+        - tripId
+        - amount
+        - method
+        - transactionRef
+      properties:
+        tripId:
+          type: string
+          description: Trip identifier to charge. Payment Service verifies this trip with Trip Service.
+          example: "101"
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+          example: 248.50
+        method:
+          type: string
+          description: Payment method selected by the rider.
+          enum:
+            - CARD
+            - UPI
+            - WALLET
+          example: CARD
+        transactionRef:
+          type: string
+          description: Client-supplied idempotency key for the charge.
+          example: txn-demo-101
+
+    PaymentResponse:
+      type: object
+      properties:
+        paymentId:
+          type: integer
+          format: int64
+          example: 1
+        tripId:
+          type: string
+          example: "101"
+        amount:
+          type: number
+          format: double
+          example: 248.50
+        method:
+          type: string
+          example: CARD
+        status:
+          type: string
+          enum:
+            - PENDING
+            - SUCCESS
+            - FAILED
+            - REFUNDED
+          example: SUCCESS
+        reference:
+          type: string
+          description: Stored transaction reference used for idempotency.
+          example: txn-demo-101
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-04-13T14:12:00
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: 2026-04-13T14:12:00.000+00:00
+        status:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: Bad Request
+        message:
+          type: string
+          example: Trip not completed
+        path:
+          type: string
+          example: /v1/payments/charge

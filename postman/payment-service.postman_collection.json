@@ -1,0 +1,223 @@
+{
+  "info": {
+    "_postman_id": "3ed23b5b-08c1-47d0-90e4-64b9aa6cd14a",
+    "name": "Payment Service",
+    "description": "Postman collection for the BITS ride-hailing Payment Service. Charge requests require a completed trip, and transactionRef demonstrates idempotency.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('service is healthy', function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/actuator/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "actuator",
+            "health"
+          ]
+        },
+        "description": "Checks Spring Boot Actuator health for Payment Service."
+      }
+    },
+    {
+      "name": "List Payments",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/v1/payments?limit=25",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "payments"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "25"
+            }
+          ]
+        },
+        "description": "Returns recent payments ordered by creation time descending."
+      }
+    },
+    {
+      "name": "Charge Completed Trip",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('charge accepted', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "if (json.paymentId) pm.collectionVariables.set('paymentId', json.paymentId);",
+              "if (json.tripId) pm.collectionVariables.set('tripId', json.tripId);",
+              "if (json.reference) pm.collectionVariables.set('transactionRef', json.reference);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tripId\": \"{{tripId}}\",\n  \"amount\": {{amount}},\n  \"method\": \"{{paymentMethod}}\",\n  \"transactionRef\": \"{{transactionRef}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/v1/payments/charge",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "payments",
+            "charge"
+          ]
+        },
+        "description": "Processes a mock payment for a COMPLETED trip. Reusing transactionRef returns the existing payment."
+      }
+    },
+    {
+      "name": "Repeat Charge With Same Transaction Ref",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tripId\": \"{{tripId}}\",\n  \"amount\": {{amount}},\n  \"method\": \"{{paymentMethod}}\",\n  \"transactionRef\": \"{{transactionRef}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/v1/payments/charge",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "payments",
+            "charge"
+          ]
+        },
+        "description": "Runs the same charge again to demonstrate idempotency."
+      }
+    },
+    {
+      "name": "Get Payment By Id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/v1/payments/{{paymentId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "payments",
+            "{{paymentId}}"
+          ]
+        },
+        "description": "Fetches one payment by its service-owned ID."
+      }
+    },
+    {
+      "name": "Get Latest Payment By Trip Id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/v1/payments/trips/{{tripId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "payments",
+            "trips",
+            "{{tripId}}"
+          ]
+        },
+        "description": "Fetches the latest payment associated with a trip."
+      }
+    },
+    {
+      "name": "Refund Payment",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/v1/payments/{{paymentId}}/refund",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "payments",
+            "{{paymentId}}",
+            "refund"
+          ]
+        },
+        "description": "Marks a payment as REFUNDED."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8082"
+    },
+    {
+      "key": "tripId",
+      "value": "101"
+    },
+    {
+      "key": "paymentId",
+      "value": "1"
+    },
+    {
+      "key": "amount",
+      "value": "248.50"
+    },
+    {
+      "key": "paymentMethod",
+      "value": "UPI"
+    },
+    {
+      "key": "transactionRef",
+      "value": "postman-trip-101"
+    }
+  ]
+}
