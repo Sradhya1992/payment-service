@@ -2,11 +2,11 @@ package com.ridehailing.payment_service.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -15,12 +15,12 @@ import jakarta.persistence.Table;
 public class Payment {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "payment_id", updatable = false, nullable = false)
-	private UUID paymentId;
+	private Long paymentId;
 
 	@Column(name = "trip_id", nullable = false)
-	private UUID tripId;
+	private String tripId;
 
 	@Column(nullable = false)
 	private BigDecimal amount;
@@ -40,7 +40,11 @@ public class Payment {
 	public Payment() {
 	}
 
-	public Payment(UUID tripId, BigDecimal amount, String method, String status, String reference) {
+	public Payment(java.util.UUID tripId, BigDecimal amount, String method, String status, String reference) {
+		this(String.valueOf(tripId), amount, method, status, reference);
+	}
+
+	public Payment(String tripId, BigDecimal amount, String method, String status, String reference) {
 		this.tripId = tripId;
 		this.amount = amount;
 		this.method = method;
@@ -49,19 +53,19 @@ public class Payment {
 		this.createdAt = LocalDateTime.now();
 	}
 
-	public UUID getPaymentId() {
+	public Long getPaymentId() {
 		return paymentId;
 	}
 
-	public void setPaymentId(UUID paymentId) {
+	public void setPaymentId(Long paymentId) {
 		this.paymentId = paymentId;
 	}
 
-	public UUID getTripId() {
+	public String getTripId() {
 		return tripId;
 	}
 
-	public void setTripId(UUID tripId) {
+	public void setTripId(String tripId) {
 		this.tripId = tripId;
 	}
 

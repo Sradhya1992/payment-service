@@ -2,14 +2,13 @@ package com.ridehailing.payment_service.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import com.ridehailing.payment_service.entity.Payment;
 
 public class PaymentResponse {
 	
-	private UUID paymentId;
-	private UUID tripId;
+	private Long paymentId;
+	private String tripId;
 	private BigDecimal amount;
 	private String method;
 	private String status;
@@ -18,7 +17,7 @@ public class PaymentResponse {
 	
 	
 	// Constructors
-    public PaymentResponse(UUID paymentId, UUID tripId, BigDecimal amount, String method,
+    public PaymentResponse(Long paymentId, String tripId, BigDecimal amount, String method,
                            String status, String reference, LocalDateTime createdAt) {
         this.paymentId = paymentId;
         this.tripId = tripId;
@@ -42,19 +41,19 @@ public class PaymentResponse {
         );
     }
 
-	public UUID getPaymentId() {
+	public Long getPaymentId() {
 		return paymentId;
 	}
 
-	public void setPaymentId(UUID paymentId) {
+	public void setPaymentId(Long paymentId) {
 		this.paymentId = paymentId;
 	}
 
-	public UUID getTripId() {
+	public String getTripId() {
 		return tripId;
 	}
 
-	public void setTripId(UUID tripId) {
+	public void setTripId(String tripId) {
 		this.tripId = tripId;
 	}
 

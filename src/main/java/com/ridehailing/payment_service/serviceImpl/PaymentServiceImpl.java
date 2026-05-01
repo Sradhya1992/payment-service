@@ -1,8 +1,10 @@
 package com.ridehailing.payment_service.serviceImpl;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.ridehailing.payment_service.dto.PaymentRequest;
@@ -25,6 +27,20 @@ public class PaymentServiceImpl implements PaymentService {
 		this.tripClient = tripClient;
 	}
 
+	public List<PaymentResponse> listPayments(int limit) {
+		int pageSize = Math.max(1, Math.min(limit, 100));
+		return repo.findAll(PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "createdAt")))
+				.stream()
+				.map(PaymentResponse::fromEntity)
+				.toList();
+	}
+
+	public PaymentResponse getPayment(Long paymentId) {
+		Payment payment = repo.findById(paymentId)
+				.orElseThrow(() -> new EntityNotFoundException("Payment not found"));
+		return PaymentResponse.fromEntity(payment);
+	}
+
 	public PaymentResponse processCharge(PaymentRequest req) {
 		// 1. Verify trip completion
 		String status = tripClient.getTripStatus(req.getTripId());
@@ -45,7 +61,7 @@ public class PaymentServiceImpl implements PaymentService {
 		return PaymentResponse.fromEntity(payment);
 	}
 
-	public PaymentResponse processRefund(UUID paymentId) {
+	public PaymentResponse processRefund(Long paymentId) {
 		Payment payment = repo.findById(paymentId)
 				.orElseThrow(() -> new EntityNotFoundException(("Payment not found")));
 		payment.setStatus("REFUNDED");
