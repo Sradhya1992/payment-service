@@ -13,6 +13,8 @@ public interface PaymentService {
 
 	public PaymentResponse getPayment(Long paymentId);
 
+	public PaymentResponse getPaymentByTripId(String tripId);
+
 	public PaymentResponse processCharge(PaymentRequest req);
 
 	public PaymentResponse processRefund(Long paymentId);

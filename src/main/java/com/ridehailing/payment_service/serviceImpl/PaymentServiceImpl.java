@@ -41,6 +41,12 @@ public class PaymentServiceImpl implements PaymentService {
 		return PaymentResponse.fromEntity(payment);
 	}
 
+	public PaymentResponse getPaymentByTripId(String tripId) {
+		Payment payment = repo.findFirstByTripIdOrderByCreatedAtDesc(tripId)
+				.orElseThrow(() -> new EntityNotFoundException("Payment not found for trip"));
+		return PaymentResponse.fromEntity(payment);
+	}
+
 	public PaymentResponse processCharge(PaymentRequest req) {
 		// 1. Verify trip completion
 		String status = tripClient.getTripStatus(req.getTripId());

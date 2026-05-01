@@ -33,6 +33,11 @@ public class PaymentController {
 	public ResponseEntity<PaymentResponse> getPayment(@PathVariable Long id) {
 		return ResponseEntity.ok(paymentService.getPayment(id));
 	}
+
+	@GetMapping("/trips/{tripId}")
+	public ResponseEntity<PaymentResponse> getPaymentByTripId(@PathVariable String tripId) {
+		return ResponseEntity.ok(paymentService.getPaymentByTripId(tripId));
+	}
 	
 	@PostMapping("/charge")
     public ResponseEntity<PaymentResponse> charge(@RequestBody PaymentRequest request) {
