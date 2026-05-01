@@ -1,7 +1,5 @@
 package com.ridehailing.payment_service.tripClient;
 
-import java.util.UUID;
-
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,6 +8,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface TripClient {
 
     @GetMapping("/{id}/status")
-    String getTripStatus(@PathVariable("id") UUID tripId);
+    String getTripStatus(@PathVariable("id") String tripId);
 }
-

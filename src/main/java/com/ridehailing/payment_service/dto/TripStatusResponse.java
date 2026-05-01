@@ -1,17 +1,15 @@
 package com.ridehailing.payment_service.dto;
 
-import java.util.UUID;
-
 public class TripStatusResponse {
 
-	private UUID tripId;
+	private String tripId;
 	private String status; // REQUESTED, ACCEPTED, ONGOING, COMPLETED, CANCELLED
 
-	public UUID getTripId() {
+	public String getTripId() {
 		return tripId;
 	}
 
-	public void setTripId(UUID tripId) {
+	public void setTripId(String tripId) {
 		this.tripId = tripId;
 	}
 
