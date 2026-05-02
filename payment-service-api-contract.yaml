@@ -32,6 +32,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
 
+  /actuator/prometheus:
+    get:
+      tags:
+        - Health
+      summary: Prometheus metrics
+      description: Returns Spring Boot Actuator metrics in Prometheus exposition format.
+      responses:
+        "200":
+          description: Prometheus-formatted service metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |
+                # HELP http_server_requests_seconds HTTP server request timing
+                # TYPE http_server_requests_seconds summary
+
   /v1/payments:
     get:
       tags:

@@ -38,6 +38,24 @@
       }
     },
     {
+      "name": "Prometheus Metrics",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/actuator/prometheus",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "actuator",
+            "prometheus"
+          ]
+        },
+        "description": "Returns Payment Service Prometheus metrics from Spring Boot Actuator."
+      }
+    },
+    {
       "name": "List Payments",
       "request": {
         "method": "GET",
